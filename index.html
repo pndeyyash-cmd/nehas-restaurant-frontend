@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neha's Restaurant</title>
+    <!-- 1. Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 2. Load React Libraries -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- 3. Load Babel to read JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- 4. Load Axios for API calls -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- 5. Load Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Main page background now uses a local image */
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #1a202c;
+            background-image: linear-gradient(rgba(26, 32, 44, 0.8), rgba(26, 32, 44, 0.8)), url('main-background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .font-serif {
+            font-family: 'Cormorant Garamond', serif;
+        }
+        .gold-text {
+            color: #E6B333; /* A richer gold color */
+        }
+        .gold-border {
+            border-color: #E6B333;
+        }
+        /* New glassmorphism style for cards */
+        .glass-card {
+            background-color: rgba(45, 55, 72, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- 6. Write React Code with JSX inside this script tag -->
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- API Base URL ---
+        const API_URL = "https://nehas-restaurant-api.onrender.com";
+
+        // --- Helper Components for Icons ---
+        const MenuIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>;
+        const ReserveIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
+        const OrderIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>;
+        const ControlPanelIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 16v-2m8-8h2M4 12H2m15.364 6.364l1.414 1.414M4.222 4.222l1.414 1.414m12.728 0l-1.414 1.414M5.636 18.364l-1.414 1.414M12 16a4 4 0 100-8 4 4 0 000 8z" /></svg>;
+        const ContactIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>;
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('menu');
+            const [menuItems, setMenuItems] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+            const [currentReservation, setCurrentReservation] = useState(null);
+            const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+
+            const fetchAllData = async () => {
+                setLoading(true);
+                setError(null);
+                try {
+                    const menuRes = await axios.get(`${API_URL}/api/menu`);
+                    setMenuItems(menuRes.data);
+                } catch (err) {
+                    setError('Failed to load menu. Please ensure the backend server is running.');
+                    console.error(err);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                fetchAllData();
+            }, []);
+            
+            const refreshData = () => {
+                fetchAllData();
+            };
+
+            const handleReservationSuccess = (reservationDetails) => {
+                setCurrentReservation(reservationDetails);
+                setActiveTab('order');
+            };
+            
+            const handleAdminLogin = () => {
+                setIsAdminLoggedIn(true);
+            };
+
+            const renderContent = () => {
+                switch (activeTab) {
+                    case 'menu':
+                        return <MenuDisplay items={menuItems} loading={loading} error={error} />;
+                    case 'reserve':
+                        return <ReservationForm onReservationSuccess={handleReservationSuccess} />;
+                    case 'order':
+                        return <OrderForm menuItems={menuItems} reservation={currentReservation} />;
+                    case 'controlPanel':
+                        return isAdminLoggedIn ? <ControlPanelDashboard menuItems={menuItems} onDataChange={refreshData} /> : <ControlPanelLogin onLoginSuccess={handleAdminLogin} />;
+                    case 'contact':
+                        return <ContactUs />;
+                    default:
+                        return null;
+                }
+            };
+
+            return (
+                <div className="min-h-screen text-gray-200">
+                    <header 
+                        className="py-10 px-4 text-center bg-cover bg-center relative"
+                        style={{backgroundImage: "linear-gradient(rgba(26, 32, 44, 0.4), rgba(26, 32, 44, 0.4)), url('brand-banner.jpg')"}}
+                    >
+                        <p className="text-gray-400 text-sm tracking-widest uppercase mb-2">Developed by Yash Vardhan Pandey</p>
+                        <h1 className="text-5xl font-serif gold-text tracking-wider" style={{textShadow: '2px 2px 8px rgba(0,0,0,0.7)'}}>Neha's Restaurant</h1>
+                        <p className="text-gray-200 mt-2 text-lg">Experience the finest dining in Gujarat</p>
+                        <p className="text-gray-300 mt-1 text-base">ગુજરાતમાં શ્રેષ્ઠ ભોજનનો અનુભવ કરો</p>
+                    </header>
+                    <nav className="flex flex-wrap justify-center bg-gray-900/50 backdrop-blur-md sticky top-0 z-10 shadow-lg border-y border-gray-700/50">
+                        <button onClick={() => setActiveTab('menu')} className={`flex items-center px-6 py-4 text-lg font-semibold transition-colors duration-300 ${activeTab === 'menu' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}><MenuIcon /> Menu</button>
+                        <button onClick={() => setActiveTab('reserve')} className={`flex items-center px-6 py-4 text-lg font-semibold transition-colors duration-300 ${activeTab === 'reserve' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}><ReserveIcon /> Reserve a Table</button>
+                        <button onClick={() => setActiveTab('order')} className={`flex items-center px-6 py-4 text-lg font-semibold transition-colors duration-300 ${activeTab === 'order' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}><OrderIcon /> Place an Order</button>
+                        <button onClick={() => setActiveTab('controlPanel')} className={`flex items-center px-6 py-4 text-lg font-semibold transition-colors duration-300 ${activeTab === 'controlPanel' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}><ControlPanelIcon /> Control Panel</button>
+                        <button onClick={() => setActiveTab('contact')} className={`flex items-center px-6 py-4 text-lg font-semibold transition-colors duration-300 ${activeTab === 'contact' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}><ContactIcon /> Contact Us</button>
+                    </nav>
+                    
+                    <main className="p-4 sm:p-8 md:p-12">
+                        {renderContent()}
+                    </main>
+                </div>
+            );
+        }
+
+        // --- ALL COMPONENTS ARE FULLY INCLUDED BELOW ---
+
+        const MenuDisplay = ({ items, loading, error }) => {
+            if (loading) return <div className="text-center text-2xl p-12">Loading Menu...</div>;
+            if (error) return <div className="text-center text-red-400 text-xl p-10 bg-red-900/50 rounded-lg max-w-2xl mx-auto">{error}</div>;
+
+            const categories = (items || []).reduce((acc, item) => {
+                (acc[item.category] = acc[item.category] || []).push(item);
+                return acc;
+            }, {});
+
+            const categoryOrder = ['Appetizers', 'Main Course', 'Beverages'];
+
+            return (
+                <div className="max-w-6xl mx-auto">
+                    {categoryOrder.map(category => categories[category] && categories[category].length > 0 && (
+                        <div key={category} className="mb-16">
+                            <div className="text-center mb-8">
+                                <h2 className="inline-block text-4xl font-serif gold-text pb-4 border-b-2 border-yellow-500/30">{category}</h2>
+                            </div>
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+                                {categories[category].map(item => (
+                                    <div key={item._id} className="glass-card rounded-xl transition-all duration-300 hover:shadow-2xl hover:border-yellow-500/50 hover:scale-105">
+                                        <div className="p-6">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h3 className="text-2xl font-bold text-gray-100">{item.name}</h3>
+                                                <p className="text-2xl font-bold gold-text whitespace-nowrap ml-4">₹{item.price}</p>
+                                            </div>
+                                            <p className="text-gray-400">{item.description}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+        
+        const ReservationForm = ({ onReservationSuccess }) => {
+            const [formData, setFormData] = useState({ name: '', phone: '', date: '', time: '', partySize: '', duration: '1', tableId: '' });
+            const [availableTables, setAvailableTables] = useState([]);
+            const [status, setStatus] = useState({ message: '', type: '' });
+            const [isSubmitting, setIsSubmitting] = useState(false);
+
+            useEffect(() => {
+                const fetchTables = async () => {
+                    try {
+                        const response = await axios.get(`${API_URL}/api/tables`);
+                        setAvailableTables(response.data); 
+                    } catch (error) {
+                        console.error("Failed to fetch tables:", error);
+                        setStatus({ message: 'Could not load tables from the server.', type: 'error' });
+                    }
+                };
+                fetchTables();
+            }, []);
+
+            const handleChange = (e) => {
+                const { name, value } = e.target;
+                
+                if (name === 'tableId') {
+                    const selectedTable = availableTables.find(t => t._id === value);
+                    if (selectedTable) {
+                        setFormData(prev => ({ 
+                            ...prev, 
+                            tableId: value, 
+                            partySize: selectedTable.capacity.toString() 
+                        }));
+                    } else {
+                        setFormData(prev => ({ ...prev, tableId: '', partySize: '' }));
+                    }
+                } else {
+                    setFormData(prev => ({ ...prev, [name]: value }));
+                }
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                const phoneRegex = /^\d{10}$/;
+                if (!phoneRegex.test(formData.phone)) {
+                    setStatus({ message: 'Please enter a valid 10-digit phone number.', type: 'error' });
+                    return;
+                }
+                if (!formData.tableId) {
+                    setStatus({ message: 'Please select an available table.', type: 'error' });
+                    return;
+                }
+                setIsSubmitting(true);
+                setStatus({ message: '', type: '' });
+                try {
+                    const reservationData = {
+                        customerName: formData.name,
+                        customerPhone: formData.phone,
+                        reservationTime: `${formData.date}T${formData.time}`,
+                        tableId: formData.tableId,
+                        partySize: formData.partySize,
+                        durationHours: formData.duration
+                    };
+                    const response = await axios.post(`${API_URL}/api/reservations`, reservationData);
+                    const selectedTable = availableTables.find(t => t._id === formData.tableId);
+                    setStatus({ message: `Success! Table #${selectedTable.tableNumber} has been reserved. You will now be taken to the order page.`, type: 'success' });
+                    setTimeout(() => {
+                        onReservationSuccess({
+                            reservationId: response.data._id,
+                            tableId: response.data.tableId,
+                            tableNumber: selectedTable.tableNumber,
+                        });
+                    }, 2000);
+                } catch (error) {
+                    const errorMessage = error.response?.data?.message || 'An error occurred during booking.';
+                    setStatus({ message: errorMessage, type: 'error' });
+                    console.error("Reservation failed:", error);
+                } finally {
+                    setIsSubmitting(false);
+                }
+            };
+            const today = new Date().toISOString().split('T')[0];
+
+            return (
+                <div className="max-w-lg mx-auto glass-card p-8 rounded-xl shadow-2xl">
+                    <h2 className="text-4xl font-serif font-bold text-center mb-8 gold-text">Reserve a Table</h2>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label htmlFor="name" className="block text-sm font-medium text-gray-300">Full Name</label>
+                            <input type="text" name="name" id="name" required value={formData.name} onChange={handleChange} className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"/>
+                        </div>
+                        <div>
+                            <label htmlFor="phone" className="block text-sm font-medium text-gray-300">Phone Number</label>
+                            <input 
+                                type="tel" 
+                                name="phone" 
+                                id="phone" 
+                                required 
+                                value={formData.phone} 
+                                onChange={handleChange}
+                                maxLength="10"
+                                pattern="\d{10}"
+                                title="Please enter a 10-digit phone number"
+                                className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label htmlFor="date" className="block text-sm font-medium text-gray-300">Date</label>
+                                <input type="date" name="date" id="date" required value={formData.date} onChange={handleChange} min={today} className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"/>
+                            </div>
+                            <div>
+                                <label htmlFor="time" className="block text-sm font-medium text-gray-300">Time</label>
+                                <input type="time" name="time" id="time" required value={formData.time} onChange={handleChange} className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"/>
+                            </div>
+                        </div>
+                         <div>
+                            <label htmlFor="tableId" className="block text-sm font-medium text-gray-300">Select a Table</label>
+                             <select name="tableId" id="tableId" required value={formData.tableId} onChange={handleChange} className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                                <option value="">-- Select a Table First --</option>
+                                {availableTables.map(table => (
+                                    <option key={table._id} value={table._id}>
+                                        Table #{table.tableNumber} (Seats {table.capacity})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label htmlFor="partySize" className="block text-sm font-medium text-gray-300">Party Size</label>
+                                <select name="partySize" id="partySize" required value={formData.partySize} onChange={handleChange} disabled={!formData.tableId} className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 disabled:bg-gray-800">
+                                    {formData.tableId ? (
+                                        [...Array(availableTables.find(t => t._id === formData.tableId)?.capacity || 0).keys()].map(i => <option key={i+1}>{i+1}</option>)
+                                    ) : (
+                                        <option value="">-- Select a table --</option>
+                                    )}
+                                </select>
+                            </div>
+                            <div>
+                                <label htmlFor="duration" className="block text-sm font-medium text-gray-300">Duration (Hours)</label>
+                                <select name="duration" id="duration" required value={formData.duration} onChange={handleChange} className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                                    <option value="1">1 Hour</option>
+                                    <option value="1.5">1.5 Hours</option>
+                                    <option value="2">2 Hours</option>
+                                    <option value="2.5">2.5 Hours</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" disabled={isSubmitting} className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-bold text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:bg-gray-500">
+                            {isSubmitting ? 'Booking...' : 'Book a Table'}
+                        </button>
+                    </form>
+                    {status.message && (
+                        <div className={`mt-4 text-center p-3 rounded-md ${status.type === 'success' ? 'bg-green-800/50 text-green-300' : 'bg-red-800/50 text-red-300'}`}>
+                            {status.message}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const OrderForm = ({ menuItems, reservation }) => {
+            const [order, setOrder] = useState({});
+            const [status, setStatus] = useState({ message: '', type: '' });
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            
+            if (!reservation) {
+                return (
+                    <div className="max-w-2xl mx-auto glass-card p-8 rounded-xl shadow-2xl text-center">
+                        <h2 className="text-3xl font-serif font-bold mb-4 gold-text">Place an Order</h2>
+                        <p className="text-gray-300 text-lg">Please reserve a table first to place your order.</p>
+                    </div>
+                );
+            }
+
+            const handleQuantityChange = (itemId, quantity) => {
+                const newOrder = { ...order };
+                if (quantity > 0) {
+                    newOrder[itemId] = quantity;
+                } else {
+                    delete newOrder[itemId];
+                }
+                setOrder(newOrder);
+            };
+
+            const calculateTotal = () => {
+                return Object.entries(order).reduce((total, [itemId, quantity]) => {
+                    const item = menuItems.find(mi => mi._id === itemId);
+                    return total + (item ? item.price * quantity : 0);
+                }, 0).toFixed(2);
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (Object.keys(order).length === 0) {
+                    setStatus({ message: 'Please select at least one item.', type: 'error' });
+                    return;
+                }
+                setIsSubmitting(true);
+                setStatus({ message: '', type: '' });
+
+                try {
+                    const orderData = {
+                        tableId: reservation.tableId,
+                        items: Object.entries(order).map(([itemId, quantity]) => ({ menuItemId: itemId, quantity })),
+                    };
+
+                    await axios.post(`${API_URL}/api/orders`, orderData);
+
+                    setStatus({ message: 'Order placed successfully!', type: 'success' });
+                    setOrder({});
+                } catch (error) {
+                    const errorMessage = error.response?.data?.message || 'Failed to place order. Please try again.';
+                    setStatus({ message: errorMessage, type: 'error' });
+                    console.error("Order failed:", error);
+                } finally {
+                    setIsSubmitting(false);
+                }
+            };
+            
+            return (
+                <div className="max-w-2xl mx-auto glass-card p-8 rounded-xl shadow-2xl">
+                    <h2 className="text-4xl font-serif font-bold text-center mb-2 gold-text">Place an Order</h2>
+                    <p className="text-center text-lg text-gray-300 mb-8">Ordering for Table #{reservation.tableNumber}</p>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <h3 className="text-lg font-medium text-gray-300 mb-2">Select Items</h3>
+                            <div className="space-y-4 max-h-64 overflow-y-auto pr-2">
+                                {(menuItems || []).map(item => (
+                                    <div key={item._id} className="flex items-center justify-between bg-gray-800/50 p-3 rounded-md">
+                                        <div>
+                                            <p className="font-semibold text-gray-100">{item.name}</p>
+                                            <p className="text-sm gold-text">₹{item.price}</p>
+                                        </div>
+                                        <input 
+                                            type="number" 
+                                            min="0" 
+                                            value={order[item._id] || 0}
+                                            onChange={(e) => handleQuantityChange(item._id, parseInt(e.target.value, 10))}
+                                            className="w-20 bg-gray-700 border border-gray-600 rounded-md text-center text-white"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="text-right text-2xl font-bold gold-text">
+                            Total: ₹{calculateTotal()}
+                        </div>
+                        
+                        <button type="submit" disabled={isSubmitting} className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-bold text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:bg-gray-500">
+                            {isSubmitting ? 'Placing Order...' : 'Place Order'}
+                        </button>
+                    </form>
+                    {status.message && (
+                        <div className={`mt-4 text-center p-3 rounded-md ${status.type === 'success' ? 'bg-green-800/50 text-green-300' : 'bg-red-800/50 text-red-300'}`}>
+                            {status.message}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+        
+        const ControlPanelLogin = ({ onLoginSuccess }) => {
+            const [step, setStep] = useState('password');
+            const [password, setPassword] = useState('');
+            const [otp, setOtp] = useState('');
+            const [countdown, setCountdown] = useState(0);
+            const [isVerifying, setIsVerifying] = useState(false);
+            const [status, setStatus] = useState({ message: '', type: '' });
+            
+            useEffect(() => {
+                let timer;
+                if (countdown > 0) {
+                    timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+                }
+                return () => clearTimeout(timer);
+            }, [countdown]);
+            
+            const handlePasswordSubmit = async (e) => {
+                e.preventDefault();
+                setIsVerifying(true);
+                setStatus({ message: '', type: '' });
+                try {
+                    await axios.post(`${API_URL}/api/auth/verify-password`, { password });
+                    setStatus({ message: 'Password verified. Sending OTP...', type: 'info' });
+                    await handleSendCode();
+                    setStep('otp');
+                } catch (error) {
+                    setStatus({ message: error.response?.data?.message || 'Invalid password.', type: 'error' });
+                    setPassword('');
+                } finally {
+                    setIsVerifying(false);
+                }
+            };
+
+            const handleSendCode = async () => {
+                try {
+                    await axios.post(`${API_URL}/api/auth/send-otp`);
+                    setCountdown(60);
+                    setStatus({ message: 'OTP has been sent to the admin phone number.', type: 'success' });
+                } catch (error) {
+                    console.error("Error sending OTP:", error);
+                    setStatus({ message: 'Failed to send OTP. Check server logs.', type: 'error' });
+                }
+            };
+
+            const handleVerifyCode = async (e) => {
+                e.preventDefault();
+                setIsVerifying(true);
+                setStatus({ message: '', type: '' });
+                try {
+                    await axios.post(`${API_URL}/api/auth/verify-otp`, { otp });
+                    setStatus({ message: 'Verification successful! Accessing control panel...', type: 'success' });
+                    setTimeout(onLoginSuccess, 1500);
+                } catch (error) {
+                    setStatus({ message: error.response?.data?.message || "Verification failed.", type: 'error' });
+                } finally {
+                    setIsVerifying(false);
+                }
+            };
+
+            return (
+                 <div className="max-w-md mx-auto glass-card p-8 rounded-xl shadow-2xl">
+                    <h2 className="text-4xl font-serif font-bold text-center mb-8 gold-text">Admin Access</h2>
+                    
+                    {step === 'password' && (
+                        <form onSubmit={handlePasswordSubmit} className="space-y-6">
+                           <p className="text-center text-gray-300">Please enter the admin password to proceed.</p>
+                            <div>
+                                <label htmlFor="password" className="block text-sm font-medium text-gray-300">Password</label>
+                                <input
+                                    type="password"
+                                    name="password"
+                                    id="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white text-center focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
+                                />
+                            </div>
+                            <button 
+                                type="submit" 
+                                disabled={isVerifying} 
+                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-bold text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:bg-gray-500"
+                            >
+                                {isVerifying ? 'Verifying...' : 'Proceed'}
+                            </button>
+                        </form>
+                    )}
+
+                    {step === 'otp' && (
+                         <form onSubmit={handleVerifyCode} className="space-y-6">
+                            <p className="text-center text-gray-300">Enter the OTP sent to the admin phone number.</p>
+                            <div>
+                                <label htmlFor="otp" className="block text-sm font-medium text-gray-300">Enter Code</label>
+                                <input
+                                    type="text"
+                                    name="otp"
+                                    id="otp"
+                                    value={otp}
+                                    onChange={(e) => setOtp(e.target.value)}
+                                    maxLength="6"
+                                    className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white text-center text-2xl tracking-widest focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
+                                    placeholder="_ _ _ _ _ _"
+                                />
+                            </div>
+
+                            <div className="flex gap-4">
+                                <button 
+                                    type="button" 
+                                    onClick={handleSendCode} 
+                                    disabled={countdown > 0} 
+                                    className="w-1/2 flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-bold text-gray-900 bg-gray-400 hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                >
+                                    {countdown > 0 ? `Resend in ${countdown}s` : 'Resend Code'}
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    disabled={isVerifying} 
+                                    className="w-1/2 flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-bold text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:bg-gray-500"
+                                >
+                                    {isVerifying ? 'Verifying...' : 'Verify Code'}
+                                </button>
+                            </div>
+                        </form>
+                    )}
+
+                    {status.message && (
+                        <div className={`mt-4 text-center p-3 rounded-md ${
+                            status.type === 'success' ? 'bg-green-800/50 text-green-300' 
+                            : status.type === 'error' ? 'bg-red-800/50 text-red-300' 
+                            : 'bg-blue-800/50 text-blue-300'
+                        }`}>
+                            {status.message}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+        
+        const ControlPanelDashboard = ({ onDataChange, menuItems }) => {
+            const [activeSubTab, setActiveSubTab] = useState('tables');
+
+            const renderSubContent = () => {
+                switch (activeSubTab) {
+                    case 'tables':
+                        return <TableManagement onDataChange={onDataChange} />;
+                    case 'menu':
+                        return <MenuManagement onDataChange={onDataChange} menuItems={menuItems} />;
+                    case 'inventory':
+                        return <InventoryManagement onDataChange={onDataChange} />;
+                    case 'orders':
+                        return <OrderHistory />;
+                    default:
+                        return null;
+                }
+            }
+
+             return (
+                <div className="max-w-7xl mx-auto glass-card p-8 rounded-xl shadow-2xl">
+                    <h2 className="text-4xl font-serif font-bold text-center mb-8 gold-text">Admin Control Panel</h2>
+                    <div className="flex justify-center border-b border-gray-700 mb-8 overflow-x-auto">
+                        <button onClick={() => setActiveSubTab('tables')} className={`flex-shrink-0 px-6 py-3 text-lg font-semibold transition-colors duration-300 ${activeSubTab === 'tables' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}>Manage Tables</button>
+                        <button onClick={() => setActiveSubTab('menu')} className={`flex-shrink-0 px-6 py-3 text-lg font-semibold transition-colors duration-300 ${activeSubTab === 'menu' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}>Manage Menu</button>
+                        <button onClick={() => setActiveSubTab('inventory')} className={`flex-shrink-0 px-6 py-3 text-lg font-semibold transition-colors duration-300 ${activeSubTab === 'inventory' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}>Manage Inventory</button>
+                        <button onClick={() => setActiveSubTab('orders')} className={`flex-shrink-0 px-6 py-3 text-lg font-semibold transition-colors duration-300 ${activeSubTab === 'orders' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}>View Orders</button>
+                    </div>
+                    {renderSubContent()}
+                </div>
+            );
+        };
+
+        const TableManagement = ({ onDataChange }) => {
+            const [tables, setTables] = useState([]);
+            const [reservations, setReservations] = useState([]);
+            const [status, setStatus] = useState({ message: '', type: '' });
+            
+            const fetchData = async () => {
+                try {
+                    const [tablesRes, reservationsRes] = await Promise.all([
+                        axios.get(`${API_URL}/api/tables`),
+                        axios.get(`${API_URL}/api/reservations`)
+                    ]);
+                    setTables(tablesRes.data);
+                    
+                    const now = new Date();
+                    setReservations(reservationsRes.data.filter(res => new Date(res.endTime) > now));
+
+                } catch (error) {
+                    console.error("Failed to fetch data:", error);
+                    setStatus({ message: "Could not load data. Ensure the backend is running.", type: "error" });
+                }
+            };
+
+            useEffect(() => {
+                fetchData();
+            }, []);
+
+            const handleAddTable = async (capacity) => {
+                try {
+                    const maxTableNumber = tables.reduce((max, table) => Math.max(max, table.tableNumber), 0);
+                    const newTable = { tableNumber: maxTableNumber + 1, capacity, isOccupied: false };
+                    await axios.post(`${API_URL}/api/tables`, newTable);
+                    setStatus({ message: `Table #${newTable.tableNumber} added successfully.`, type: 'success' });
+                    fetchData();
+                } catch (error) {
+                    setStatus({ message: error.response?.data?.message || "Failed to add table.", type: "error"});
+                }
+            };
+            
+            const handleDeleteTable = async (tableId) => {
+                if (!window.confirm("Are you sure you want to delete this table?")) return;
+                try {
+                    await axios.delete(`${API_URL}/api/tables/${tableId}`);
+                    setStatus({ message: "Table deleted successfully.", type: "success" });
+                    fetchData();
+                } catch (error) {
+                    setStatus({ message: error.response?.data?.message || "Failed to delete table.", type: "error" });
+                }
+            };
+            
+            const handleCancelReservation = async (reservationId) => {
+                 if (!window.confirm("Are you sure you want to cancel this reservation?")) return;
+                try {
+                    await axios.delete(`${API_URL}/api/reservations/${reservationId}`);
+                    setStatus({ message: "Reservation cancelled successfully.", type: "success" });
+                    fetchData();
+                } catch (error) {
+                    setStatus({ message: "Failed to cancel reservation.", type: "error" });
+                }
+            };
+
+            const tableSummary = tables.reduce((acc, table) => {
+                acc[table.capacity] = (acc[table.capacity] || 0) + 1;
+                return acc;
+            }, {});
+
+            const capacities = [2, 4, 6, 8];
+
+            return (
+                <div>
+                    {status.message && (
+                        <div className={`mb-4 text-center p-3 rounded-md ${status.type === 'success' ? 'bg-green-800/50 text-green-300' : 'bg-red-800/50 text-red-300'}`}>
+                            {status.message}
+                        </div>
+                    )}
+                    <div className="grid md:grid-cols-2 gap-8">
+                        <div className="glass-card p-6 rounded-lg">
+                             <h3 className="text-2xl font-serif gold-text mb-4 border-b border-gray-600 pb-2">Table Inventory</h3>
+                             <div className="space-y-4 mb-6">
+                                {capacities.map(capacity => (
+                                    <div key={capacity} className="flex justify-between items-center bg-gray-800/50 p-3 rounded-md">
+                                        <p className="text-lg">{capacity}-Seater Tables</p>
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-xl font-bold gold-text">{tableSummary[capacity] || 0}</span>
+                                            <button onClick={() => handleAddTable(capacity)} className="bg-yellow-500 text-gray-900 font-bold w-8 h-8 rounded-full hover:bg-yellow-400 transition-colors">+</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <h3 className="text-2xl font-serif gold-text mb-4 border-b border-gray-600 pb-2">All Tables</h3>
+                             <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                                {(tables || []).map(table => (
+                                    <div key={table._id} className="flex justify-between items-center bg-gray-800/50 p-2 rounded-md">
+                                        <p>Table #{table.tableNumber} (Seats: {table.capacity})</p>
+                                        <button onClick={() => handleDeleteTable(table._id)} className="text-red-400 hover:text-red-300 text-xs font-semibold">DELETE</button>
+                                    </div>
+                                ))}
+                             </div>
+                        </div>
+
+                        <div className="glass-card p-6 rounded-lg">
+                             <h3 className="text-2xl font-serif gold-text mb-4 border-b border-gray-600 pb-2">Current Reservations</h3>
+                             <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                                {reservations.length > 0 ? (
+                                    reservations.map(res => (
+                                        <div key={res._id} className="bg-gray-800/50 p-3 rounded-md flex justify-between items-center">
+                                            <div>
+                                                <p className="font-bold">Table #{res.tableId?.tableNumber || 'N/A'}: <span className="font-normal text-gray-300">{res.customerName}</span></p>
+                                                <p className="text-sm text-gray-400">Ends at: {new Date(res.endTime).toLocaleTimeString()}</p>
+                                            </div>
+                                            <button onClick={() => handleCancelReservation(res._id)} className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-500 text-xs">Cancel</button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-gray-400">No active reservations.</p>
+                                )}
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+        
+        const MenuManagement = ({ onDataChange, menuItems }) => {
+            const [inventory, setInventory] = useState([]);
+            const [newItem, setNewItem] = useState({ name: '', description: '', price: '', category: 'Appetizers' });
+            const [editingItem, setEditingItem] = useState(null);
+            const [status, setStatus] = useState({ message: '', type: '' });
+            const menu = menuItems || [];
+
+            const fetchData = async () => {
+                try {
+                    const inventoryRes = await axios.get(`${API_URL}/api/inventory`);
+                    setInventory(inventoryRes.data);
+                } catch (error) {
+                    console.error("Failed to fetch inventory:", error);
+                }
+            };
+
+            useEffect(() => {
+                fetchData();
+            }, [menu]);
+
+            const handleInputChange = (e) => {
+                const { name, value } = e.target;
+                if(editingItem) {
+                    setEditingItem({...editingItem, [name]: value });
+                } else {
+                    setNewItem({...newItem, [name]: value });
+                }
+            };
+            
+            const handleAddItem = async (e) => {
+                e.preventDefault();
+                try {
+                    await axios.post(`${API_URL}/api/menu`, newItem);
+                    const newInventoryItem = { itemName: newItem.name, quantity: 5, unit: 'servings' };
+                    await axios.post(`${API_URL}/api/inventory`, newInventoryItem);
+                    setStatus({ message: `${newItem.name} added successfully.`, type: 'success' });
+                    setNewItem({ name: '', description: '', price: '', category: 'Appetizers' });
+                    onDataChange();
+                } catch (error) {
+                    const errorMessage = error.response?.data?.message || "Failed to add item. Check server logs.";
+                    setStatus({ message: errorMessage, type: "error" });
+                }
+            };
+
+            const handleDeleteItem = async (itemToDelete) => {
+                if (!window.confirm(`Are you sure you want to delete ${itemToDelete.name}?`)) return;
+                try {
+                    await axios.delete(`${API_URL}/api/menu/${itemToDelete._id}`);
+                    const inventoryItem = inventory.find(inv => inv.itemName === itemToDelete.name);
+                    if (inventoryItem) {
+                        await axios.delete(`${API_URL}/api/inventory/${inventoryItem._id}`);
+                    }
+                    setStatus({ message: `${itemToDelete.name} deleted successfully.`, type: 'success' });
+                    onDataChange();
+                } catch (error) {
+                    setStatus({ message: "Failed to delete item.", type: "error" });
+                }
+            };
+            
+            const handleUpdateItem = async (e) => {
+                e.preventDefault();
+                try {
+                    await axios.put(`${API_URL}/api/menu/${editingItem._id}`, editingItem);
+                    setStatus({ message: `${editingItem.name} updated successfully.`, type: 'success' });
+                    setEditingItem(null);
+                    onDataChange();
+                } catch (error) {
+                    setStatus({ message: "Failed to update item.", type: "error" });
+                }
+            };
+
+            const categories = menu.reduce((acc, item) => {
+                (acc[item.category] = acc[item.category] || []).push(item);
+                return acc;
+            }, {});
+            
+            const categoryOrder = ['Appetizers', 'Main Course', 'Beverages'];
+
+            return (
+                <div>
+                    {status.message && (
+                        <div className={`mb-4 text-center p-3 rounded-md ${status.type === 'success' ? 'bg-green-800/50 text-green-300' : 'bg-red-800/50 text-red-300'}`}>
+                            {status.message}
+                        </div>
+                    )}
+                    <div className="glass-card p-6 rounded-lg mb-8">
+                        <h3 className="text-2xl font-serif gold-text mb-4">{editingItem ? 'Edit Menu Item' : 'Add New Menu Item'}</h3>
+                        <form onSubmit={editingItem ? handleUpdateItem : handleAddItem} className="grid md:grid-cols-4 gap-4 items-end">
+                            <input name="name" value={editingItem ? editingItem.name : newItem.name} onChange={handleInputChange} placeholder="Item Name" required className="w-full bg-gray-700/50 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500" />
+                            <input name="description" value={editingItem ? editingItem.description : newItem.description} onChange={handleInputChange} placeholder="Description" required className="w-full bg-gray-700/50 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500" />
+                            <input name="price" type="number" value={editingItem ? editingItem.price : newItem.price} onChange={handleInputChange} placeholder="Price" required className="w-full bg-gray-700/50 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500" />
+                            <select name="category" value={editingItem ? editingItem.category : newItem.category} onChange={handleInputChange} className="w-full bg-gray-700/50 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                                {categoryOrder.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                            </select>
+                            <button type="submit" className="md:col-span-4 w-full justify-center py-2 px-4 rounded-md text-lg font-bold text-gray-900 bg-yellow-400 hover:bg-yellow-500">{editingItem ? 'Update Item' : 'Add Item'}</button>
+                            {editingItem && <button type="button" onClick={() => setEditingItem(null)} className="md:col-span-4 w-full justify-center py-2 px-4 rounded-md text-lg font-bold text-white bg-gray-500 hover:bg-gray-600">Cancel Edit</button>}
+                        </form>
+                    </div>
+
+                    <div className="space-y-8">
+                        {categoryOrder.map(category => categories[category] && (
+                            <div key={category}>
+                                <h3 className="text-3xl font-serif gold-text mb-4 border-b border-gray-600 pb-2">{category}</h3>
+                                <div className="space-y-3">
+                                    {categories[category].map(item => (
+                                        <div key={item._id} className="glass-card p-4 rounded-lg flex justify-between items-center">
+                                            <div>
+                                                <p className="text-xl font-bold">{item.name}</p>
+                                                <p className="text-gray-400">{item.description}</p>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <p className="text-xl font-bold gold-text">₹{item.price}</p>
+                                                <button onClick={() => setEditingItem(item)} className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-500">Edit</button>
+                                                <button onClick={() => handleDeleteItem(item)} className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-500">Delete</button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+        
+        const InventoryManagement = ({ onDataChange }) => {
+            const [inventory, setInventory] = useState([]);
+            const [status, setStatus] = useState({ message: '', type: '' });
+            const [updateQuantities, setUpdateQuantities] = useState({});
+
+            const fetchData = async () => {
+                try {
+                    const inventoryRes = await axios.get(`${API_URL}/api/inventory`);
+                    setInventory(inventoryRes.data);
+                } catch (error) {
+                    console.error("Failed to fetch inventory:", error);
+                    setStatus({ message: "Could not load inventory. Ensure backend is running.", type: "error" });
+                }
+            };
+
+            useEffect(() => {
+                fetchData();
+            }, []);
+
+            const handleQuantityChange = (itemId, quantity) => {
+                setUpdateQuantities({ ...updateQuantities, [itemId]: quantity });
+            };
+
+            const handleUpdateStock = async (itemId) => {
+                const newQuantity = updateQuantities[itemId];
+                if (newQuantity === undefined || newQuantity < 0) {
+                    setStatus({ message: "Please enter a valid quantity.", type: "error" });
+                    return;
+                }
+                try {
+                    await axios.put(`${API_URL}/api/inventory/${itemId}`, { quantity: newQuantity });
+                    setStatus({ message: `Stock updated successfully.`, type: 'success' });
+                    fetchData();
+                    onDataChange();
+                } catch (error) {
+                    console.error("Failed to update stock:", error);
+                    setStatus({ message: "Failed to update stock.", type: "error" });
+                }
+            };
+            
+            return (
+                 <div>
+                    {status.message && (
+                        <div className={`mb-4 text-center p-3 rounded-md ${status.type === 'success' ? 'bg-green-800/50 text-green-300' : 'bg-red-800/50 text-red-300'}`}>
+                            {status.message}
+                        </div>
+                    )}
+                    <h3 className="text-3xl font-serif gold-text mb-4 border-b border-gray-600 pb-2">Inventory Stock</h3>
+                    <div className="space-y-3">
+                        {inventory.map(item => (
+                            <div key={item._id} className="glass-card p-4 rounded-lg flex justify-between items-center">
+                                <div>
+                                    <p className="text-xl font-bold">{item.itemName}</p>
+                                    <p className="text-gray-400">Current Stock: {item.quantity} {item.unit}</p>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <input 
+                                        type="number" 
+                                        placeholder="New Qty"
+                                        onChange={(e) => handleQuantityChange(item._id, e.target.value)}
+                                        className="w-24 bg-gray-700/50 border border-gray-600 rounded-md py-1 px-2 text-white text-center"
+                                    />
+                                    <button onClick={() => handleUpdateStock(item._id)} className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-500">Update</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                 </div>
+            );
+        };
+        
+        const OrderHistory = () => {
+            const [orders, setOrders] = useState([]);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                const fetchOrders = async () => {
+                    try {
+                        const response = await axios.get(`${API_URL}/api/orders`);
+                        setOrders(response.data.reverse()); // Show newest orders first
+                    } catch (error) {
+                        console.error("Failed to fetch orders:", error);
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+                fetchOrders();
+            }, []);
+
+            if (loading) return <div className="text-center">Loading orders...</div>;
+
+            return (
+                <div>
+                     <h3 className="text-3xl font-serif gold-text mb-4 border-b border-gray-600 pb-2">Order History</h3>
+                     <div className="space-y-4">
+                        {orders.map(order => (
+                            <div key={order._id} className="glass-card p-4 rounded-lg">
+                                <div className="flex justify-between items-center mb-2">
+                                    <p className="font-bold">Table #{order.tableId?.tableNumber || 'N/A'}</p>
+                                    <p className="gold-text font-bold text-lg">Total: ₹{order.totalAmount.toFixed(2)}</p>
+                                </div>
+                                <ul className="list-disc list-inside text-gray-300 mb-2">
+                                    {order.items.map(item => (
+                                        <li key={item._id}>{item.quantity} x {item.menuItemId?.name || 'Item'}</li>
+                                    ))}
+                                </ul>
+                                <p className="text-xs text-gray-500">Order Placed: {new Date(order.createdAt).toLocaleString()}</p>
+                            </div>
+                        ))}
+                     </div>
+                </div>
+            );
+        };
+
+        const ContactUs = () => {
+            const mapUrl = "https://www.google.com/maps/search/?api=1&query=C.G.+Road,Ahmedabad,Gujarat";
+            
+            return (
+                <div className="max-w-2xl mx-auto glass-card p-8 md:p-12 rounded-xl shadow-2xl">
+                    <h2 className="text-4xl font-serif font-bold text-center mb-10 gold-text">Get In Touch</h2>
+                    <div className="space-y-8 text-center">
+                        <div>
+                            <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="inline-block group">
+                                <h3 className="text-2xl font-bold gold-text mb-2 flex items-center justify-center group-hover:underline">
+                                    Our Address
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                </h3>
+                                <p className="text-gray-300">123 Commerce Six Roads, C.G. Road</p>
+                                <p className="text-gray-300">Ahmedabad, Gujarat - 380009</p>
+                            </a>
+                        </div>
+                        <div>
+                            <h3 className="text-2xl font-bold gold-text mb-2">Contact Details</h3>
+                            <p className="text-gray-300">Phone: <a href="tel:+91987654XXXX" className="hover:underline">+91 98765 4XXXX</a></p>
+                            <p className="text-gray-300">Email: <a href="mailto:nehasrestaurant@gmail.com" className="hover:underline">nehasrestaurant@gmail.com</a></p>
+                        </div>
+                        <div>
+                            <h3 className="text-2xl font-bold gold-text mb-2">Opening Hours</h3>
+                            <p className="text-gray-300">Breakfast: 8:00 AM - 10:30 AM</p>
+                            <p className="text-gray-300">Lunch: 12:00 PM - 3:00 PM</p>
+                            <p className="text-gray-300">Dinner: 7:00 PM - 11:30 PM</p>
+                        </div>
+                        <div>
+                            <h3 className="text-2xl font-bold gold-text mb-3">Developer Contact</h3>
+                            <div className="flex justify-center items-center space-x-6">
+                                <a href="mailto:pndeyyash@gmail.com" className="text-gray-400 hover:gold-text transition-colors">
+                                    <svg className="h-8 w-8" fill="currentColor" viewBox="0 0 24 24"><path d="M2.5 4.5h19c.825 0 1.5.675 1.5 1.5v12c0 .825-.675 1.5-1.5 1.5h-19c-.825 0-1.5-.675-1.5-1.5v-12c0-.825.675-1.5 1.5-1.5zM3.14 6l8.86 5.907L20.86 6H3.14zM2.5 18h19V7.935l-9.5 6.333L2.5 7.935V18z"/></svg>
+                                </a>
+                                <a href="http://www.linkedin.com/in/yash-pandey-fullstack" target="_blank" className="text-gray-400 hover:gold-text transition-colors">
+                                    <svg className="h-8 w-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
