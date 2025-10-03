@@ -4,16 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Neha's Restaurant</title>
-    <!-- 1. Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 2. Load React Libraries -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <!-- 3. Load Babel to read JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- 4. Load Axios for API calls -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <!-- 5. Load Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
@@ -49,7 +44,6 @@
 <body>
     <div id="root"></div>
 
-    <!-- 6. Write React Code with JSX inside this script tag -->
     <script type="text/babel">
         const { useState, useEffect } = React;
 
@@ -126,16 +120,20 @@
                         style={{backgroundImage: "linear-gradient(rgba(26, 32, 44, 0.4), rgba(26, 32, 44, 0.4)), url('brand-banner.jpg')"}}
                     >
                         <p className="text-gray-400 text-sm tracking-widest uppercase mb-2">Developed by Yash Vardhan Pandey</p>
-                        <h1 className="text-5xl font-serif gold-text tracking-wider" style={{textShadow: '2px 2px 8px rgba(0,0,0,0.7)'}}>Neha's Restaurant</h1>
-                        <p className="text-gray-200 mt-2 text-lg">Experience the finest dining in Gujarat</p>
+                        {/* RESPONSIVE CHANGE: Font size adjusts for smaller screens */}
+                        <h1 className="text-4xl md:text-5xl font-serif gold-text tracking-wider" style={{textShadow: '2px 2px 8px rgba(0,0,0,0.7)'}}>Neha's Restaurant</h1>
+                        <p className="text-gray-200 mt-2 text-base md:text-lg">Experience the finest dining in Gujarat</p>
                         <p className="text-gray-300 mt-1 text-base">ગુજરાતમાં શ્રેષ્ઠ ભોજનનો અનુભવ કરો</p>
                     </header>
-                    <nav className="flex flex-wrap justify-center bg-gray-900/50 backdrop-blur-md sticky top-0 z-10 shadow-lg border-y border-gray-700/50">
-                        <button onClick={() => setActiveTab('menu')} className={`flex items-center px-6 py-4 text-lg font-semibold transition-colors duration-300 ${activeTab === 'menu' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}><MenuIcon /> Menu</button>
-                        <button onClick={() => setActiveTab('reserve')} className={`flex items-center px-6 py-4 text-lg font-semibold transition-colors duration-300 ${activeTab === 'reserve' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}><ReserveIcon /> Reserve a Table</button>
-                        <button onClick={() => setActiveTab('order')} className={`flex items-center px-6 py-4 text-lg font-semibold transition-colors duration-300 ${activeTab === 'order' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}><OrderIcon /> Place an Order</button>
-                        <button onClick={() => setActiveTab('controlPanel')} className={`flex items-center px-6 py-4 text-lg font-semibold transition-colors duration-300 ${activeTab === 'controlPanel' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}><ControlPanelIcon /> Control Panel</button>
-                        <button onClick={() => setActiveTab('contact')} className={`flex items-center px-6 py-4 text-lg font-semibold transition-colors duration-300 ${activeTab === 'contact' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}><ContactIcon /> Contact Us</button>
+                    
+                    {/* RESPONSIVE CHANGE: Stacks vertically on mobile, horizontally on desktop */}
+                    <nav className="flex flex-col md:flex-row md:flex-wrap md:justify-center bg-gray-900/50 backdrop-blur-md sticky top-0 z-10 shadow-lg border-y border-gray-700/50">
+                        {/* RESPONSIVE CHANGE: Adjusted padding, font size, and active state for mobile */}
+                        <button onClick={() => setActiveTab('menu')} className={`flex items-center justify-center w-full md:w-auto px-4 py-3 md:px-6 md:py-4 text-base md:text-lg font-semibold transition-colors duration-300 ${activeTab === 'menu' ? 'gold-text bg-gray-700/50 md:bg-transparent md:border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}><MenuIcon /> Menu</button>
+                        <button onClick={() => setActiveTab('reserve')} className={`flex items-center justify-center w-full md:w-auto px-4 py-3 md:px-6 md:py-4 text-base md:text-lg font-semibold transition-colors duration-300 ${activeTab === 'reserve' ? 'gold-text bg-gray-700/50 md:bg-transparent md:border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}><ReserveIcon /> Reserve a Table</button>
+                        <button onClick={() => setActiveTab('order')} className={`flex items-center justify-center w-full md:w-auto px-4 py-3 md:px-6 md:py-4 text-base md:text-lg font-semibold transition-colors duration-300 ${activeTab === 'order' ? 'gold-text bg-gray-700/50 md:bg-transparent md:border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}><OrderIcon /> Place an Order</button>
+                        <button onClick={() => setActiveTab('controlPanel')} className={`flex items-center justify-center w-full md:w-auto px-4 py-3 md:px-6 md:py-4 text-base md:text-lg font-semibold transition-colors duration-300 ${activeTab === 'controlPanel' ? 'gold-text bg-gray-700/50 md:bg-transparent md:border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}><ControlPanelIcon /> Control Panel</button>
+                        <button onClick={() => setActiveTab('contact')} className={`flex items-center justify-center w-full md:w-auto px-4 py-3 md:px-6 md:py-4 text-base md:text-lg font-semibold transition-colors duration-300 ${activeTab === 'contact' ? 'gold-text bg-gray-700/50 md:bg-transparent md:border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}><ContactIcon /> Contact Us</button>
                     </nav>
                     
                     <main className="p-4 sm:p-8 md:p-12">
@@ -265,7 +263,7 @@
             const today = new Date().toISOString().split('T')[0];
 
             return (
-                <div className="max-w-lg mx-auto glass-card p-8 rounded-xl shadow-2xl">
+                <div className="max-w-lg mx-auto glass-card p-6 sm:p-8 rounded-xl shadow-2xl">
                     <h2 className="text-4xl font-serif font-bold text-center mb-8 gold-text">Reserve a Table</h2>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
@@ -287,7 +285,8 @@
                                 className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        {/* RESPONSIVE CHANGE: Stacks to 1 column on smallest screens */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label htmlFor="date" className="block text-sm font-medium text-gray-300">Date</label>
                                 <input type="date" name="date" id="date" required value={formData.date} onChange={handleChange} min={today} className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"/>
@@ -300,15 +299,16 @@
                          <div>
                             <label htmlFor="tableId" className="block text-sm font-medium text-gray-300">Select a Table</label>
                              <select name="tableId" id="tableId" required value={formData.tableId} onChange={handleChange} className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
-                                <option value="">-- Select a Table First --</option>
-                                {availableTables.map(table => (
-                                    <option key={table._id} value={table._id}>
-                                        Table #{table.tableNumber} (Seats {table.capacity})
-                                    </option>
-                                ))}
+                                 <option value="">-- Select a Table First --</option>
+                                 {availableTables.map(table => (
+                                     <option key={table._id} value={table._id}>
+                                         Table #{table.tableNumber} (Seats {table.capacity})
+                                     </option>
+                                 ))}
                             </select>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        {/* RESPONSIVE CHANGE: Stacks to 1 column on smallest screens */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label htmlFor="partySize" className="block text-sm font-medium text-gray-300">Party Size</label>
                                 <select name="partySize" id="partySize" required value={formData.partySize} onChange={handleChange} disabled={!formData.tableId} className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 disabled:bg-gray-800">
@@ -402,7 +402,7 @@
             };
             
             return (
-                <div className="max-w-2xl mx-auto glass-card p-8 rounded-xl shadow-2xl">
+                <div className="max-w-2xl mx-auto glass-card p-6 sm:p-8 rounded-xl shadow-2xl">
                     <h2 className="text-4xl font-serif font-bold text-center mb-2 gold-text">Place an Order</h2>
                     <p className="text-center text-lg text-gray-300 mb-8">Ordering for Table #{reservation.tableNumber}</p>
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -600,13 +600,13 @@
             }
 
              return (
-                <div className="max-w-7xl mx-auto glass-card p-8 rounded-xl shadow-2xl">
+                 <div className="max-w-7xl mx-auto glass-card p-4 sm:p-8 rounded-xl shadow-2xl">
                     <h2 className="text-4xl font-serif font-bold text-center mb-8 gold-text">Admin Control Panel</h2>
                     <div className="flex justify-center border-b border-gray-700 mb-8 overflow-x-auto">
-                        <button onClick={() => setActiveSubTab('tables')} className={`flex-shrink-0 px-6 py-3 text-lg font-semibold transition-colors duration-300 ${activeSubTab === 'tables' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}>Manage Tables</button>
-                        <button onClick={() => setActiveSubTab('menu')} className={`flex-shrink-0 px-6 py-3 text-lg font-semibold transition-colors duration-300 ${activeSubTab === 'menu' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}>Manage Menu</button>
-                        <button onClick={() => setActiveSubTab('inventory')} className={`flex-shrink-0 px-6 py-3 text-lg font-semibold transition-colors duration-300 ${activeSubTab === 'inventory' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}>Manage Inventory</button>
-                        <button onClick={() => setActiveSubTab('orders')} className={`flex-shrink-0 px-6 py-3 text-lg font-semibold transition-colors duration-300 ${activeSubTab === 'orders' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}>View Orders</button>
+                        <button onClick={() => setActiveSubTab('tables')} className={`flex-shrink-0 px-4 py-3 sm:px-6 text-base sm:text-lg font-semibold transition-colors duration-300 ${activeSubTab === 'tables' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}>Manage Tables</button>
+                        <button onClick={() => setActiveSubTab('menu')} className={`flex-shrink-0 px-4 py-3 sm:px-6 text-base sm:text-lg font-semibold transition-colors duration-300 ${activeSubTab === 'menu' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}>Manage Menu</button>
+                        <button onClick={() => setActiveSubTab('inventory')} className={`flex-shrink-0 px-4 py-3 sm:px-6 text-base sm:text-lg font-semibold transition-colors duration-300 ${activeSubTab === 'inventory' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}>Manage Inventory</button>
+                        <button onClick={() => setActiveSubTab('orders')} className={`flex-shrink-0 px-4 py-3 sm:px-6 text-base sm:text-lg font-semibold transition-colors duration-300 ${activeSubTab === 'orders' ? 'gold-text border-b-2 gold-border' : 'text-gray-400 hover:gold-text'}`}>View Orders</button>
                     </div>
                     {renderSubContent()}
                 </div>
@@ -687,7 +687,7 @@
                             {status.message}
                         </div>
                     )}
-                    <div className="grid md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="glass-card p-6 rounded-lg">
                              <h3 className="text-2xl font-serif gold-text mb-4 border-b border-gray-600 pb-2">Table Inventory</h3>
                              <div className="space-y-4 mb-6">
@@ -822,7 +822,7 @@
                     )}
                     <div className="glass-card p-6 rounded-lg mb-8">
                         <h3 className="text-2xl font-serif gold-text mb-4">{editingItem ? 'Edit Menu Item' : 'Add New Menu Item'}</h3>
-                        <form onSubmit={editingItem ? handleUpdateItem : handleAddItem} className="grid md:grid-cols-4 gap-4 items-end">
+                        <form onSubmit={editingItem ? handleUpdateItem : handleAddItem} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                             <input name="name" value={editingItem ? editingItem.name : newItem.name} onChange={handleInputChange} placeholder="Item Name" required className="w-full bg-gray-700/50 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500" />
                             <input name="description" value={editingItem ? editingItem.description : newItem.description} onChange={handleInputChange} placeholder="Description" required className="w-full bg-gray-700/50 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500" />
                             <input name="price" type="number" value={editingItem ? editingItem.price : newItem.price} onChange={handleInputChange} placeholder="Price" required className="w-full bg-gray-700/50 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500" />
@@ -840,12 +840,12 @@
                                 <h3 className="text-3xl font-serif gold-text mb-4 border-b border-gray-600 pb-2">{category}</h3>
                                 <div className="space-y-3">
                                     {categories[category].map(item => (
-                                        <div key={item._id} className="glass-card p-4 rounded-lg flex justify-between items-center">
-                                            <div>
+                                        <div key={item._id} className="glass-card p-4 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                                            <div className="mb-3 sm:mb-0">
                                                 <p className="text-xl font-bold">{item.name}</p>
                                                 <p className="text-gray-400">{item.description}</p>
                                             </div>
-                                            <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
                                                 <p className="text-xl font-bold gold-text">₹{item.price}</p>
                                                 <button onClick={() => setEditingItem(item)} className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-500">Edit</button>
                                                 <button onClick={() => handleDeleteItem(item)} className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-500">Delete</button>
@@ -910,12 +910,12 @@
                     <h3 className="text-3xl font-serif gold-text mb-4 border-b border-gray-600 pb-2">Inventory Stock</h3>
                     <div className="space-y-3">
                         {inventory.map(item => (
-                            <div key={item._id} className="glass-card p-4 rounded-lg flex justify-between items-center">
-                                <div>
+                            <div key={item._id} className="glass-card p-4 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                                <div className="mb-3 sm:mb-0">
                                     <p className="text-xl font-bold">{item.itemName}</p>
                                     <p className="text-gray-400">Current Stock: {item.quantity} {item.unit}</p>
                                 </div>
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
                                     <input 
                                         type="number" 
                                         placeholder="New Qty"
@@ -957,8 +957,8 @@
                      <div className="space-y-4">
                         {orders.map(order => (
                             <div key={order._id} className="glass-card p-4 rounded-lg">
-                                <div className="flex justify-between items-center mb-2">
-                                    <p className="font-bold">Table #{order.tableId?.tableNumber || 'N/A'}</p>
+                                <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-2">
+                                    <p className="font-bold mb-1 sm:mb-0">Table #{order.tableId?.tableNumber || 'N/A'}</p>
                                     <p className="gold-text font-bold text-lg">Total: ₹{order.totalAmount.toFixed(2)}</p>
                                 </div>
                                 <ul className="list-disc list-inside text-gray-300 mb-2">
@@ -1024,4 +1024,3 @@
     </script>
 </body>
 </html>
-
